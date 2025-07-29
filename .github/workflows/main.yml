@@ -1,4 +1,4 @@
-# documentation is now...........
+# documentation is now............
 
 name: CI for Bymamshala Frontend
 
@@ -61,9 +61,9 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             docker pull gymflownepal/byayamshala:latest
-            docker stop gym-frontend || true
-            docker rm gym-frontend || true
+            docker stop byayamshala || true
+            docker rm byayamshala || true
 
-            docker run -d -p 5001:80 --name gym-frontend gymflownepal/byayamshala
+            docker run -d -p 5001:80 --name byayamshala gymflownepal/byayamshala
             # Remove untagged (dangling) frontend images
             docker images --filter "dangling=true" --format "{{.ID}}" "gymflownepal/byayamshala" | xargs -r docker rmi
