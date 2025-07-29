@@ -1,0 +1,34 @@
+export const finance = [
+    {
+        id:1,
+        name:'savings',
+    },
+    {
+        id:2,
+        name:'expenses',
+    },
+    {
+        id:3,
+        name:'sales',
+    },
+    {
+        id:4,
+        name:'credits',
+    },
+    {
+        id:5,
+        name:'suppliers',
+    },
+    {
+        id:6,
+        name:'purchase',
+    },
+    {
+        id:6,
+        name:'sales-returns',
+    },
+    {
+        id:6,
+        name:'purchase-returns',
+    },
+]

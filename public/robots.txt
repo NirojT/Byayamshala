@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://gymudaan.com/sitemap.xml
+
+# Nepal-specific crawling preferences
+User-agent: Googlebot
+Crawl-delay: 1
+
+# Block unnecessary paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /404
+Disallow: /auth/
+
+# Allow important pages
+Allow: /
+Allow: /services
+Allow: /pricing
+Allow: /about
+Allow: /contact

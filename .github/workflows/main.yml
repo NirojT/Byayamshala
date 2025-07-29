@@ -1,0 +1,69 @@
+# documentation is now..........
+
+name: CI for Bymamshala Frontend
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+    # node-version: [22.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+          registry-url: "https://registry.yarnpkg.com"
+      - name: Install dependencies
+        run: yarn install
+      - name: Build with Vite
+        run: yarn build
+
+  docker:
+    needs: build # This job will only run after the 'build' job completes successfully
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and push Docker image
+        uses: mr-smithers-excellent/docker-build-push@v5
+        with:
+          image: gymflownepal/byayamshala
+          tags: latest
+          registry: docker.io
+          dockerfile: Dockerfile
+
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code and deploy
+        uses: actions/checkout@v4
+
+      - name: SSH and Deploy frontend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            docker pull gymflownepal/byayamshala:latest
+            docker stop gym-frontend || true
+            docker rm gym-frontend || true
+
+            docker run -d -p 5000:80 --name gym-frontend gymflownepal/byayamshala
+            # Remove untagged (dangling) frontend images
+            docker images --filter "dangling=true" --format "{{.ID}}" "gymflownepal/byayamshala" | xargs -r docker rmi
