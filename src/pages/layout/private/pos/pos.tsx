@@ -30,6 +30,7 @@ export default function POSBilling() {
   const [showPrint, setShowPrint] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [discountInput, setDiscountInput] = useState<string>("");
 
   const itemSelectRef = useRef<HTMLSelectElement>(null);
 
@@ -68,11 +69,29 @@ export default function POSBilling() {
     setBillItems((prev) => prev.filter((i) => i.id !== id));
   };
 
-  // Bill total
-  const total = billItems.reduce(
+  // Bill total and discount calculations
+  const subtotal = billItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  // Calculate discount amount based on input
+  const calculateDiscount = (input: string, subtotal: number): number => {
+    if (!input.trim()) return 0;
+    
+    if (input.endsWith('%')) {
+      const percentage = parseFloat(input.slice(0, -1));
+      if (isNaN(percentage)) return 0;
+      return Math.min((subtotal * percentage) / 100, subtotal);
+    } else {
+      const fixedAmount = parseFloat(input);
+      if (isNaN(fixedAmount)) return 0;
+      return Math.min(fixedAmount, subtotal);
+    }
+  };
+
+  const discountAmount = calculateDiscount(discountInput, subtotal);
+  const total = subtotal - discountAmount;
 
   // Print simulation
   const handlePrint = () => setShowPrint(true);
@@ -264,15 +283,44 @@ export default function POSBilling() {
                   ))
                 )}
                 {billItems.length > 0 && (
-                  <tr className="bg-gradient-to-r from-blue-100 to-green-100 font-bold">
-                    <td className="py-2 px-3 text-right" colSpan={3}>
-                      Total
-                    </td>
-                    <td className="py-2 px-3 text-right">
-                      {formatCurrency(total)}
-                    </td>
-                    <td />
-                  </tr>
+                  <>
+                    <tr className="bg-gradient-to-r from-blue-50 to-green-50">
+                      <td className="py-2 px-3 text-right font-medium" colSpan={3}>
+                        Subtotal
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium">
+                        {formatCurrency(subtotal)}
+                      </td>
+                      <td />
+                    </tr>
+                    <tr className="bg-gradient-to-r from-blue-50 to-green-50">
+                      <td className="py-2 px-3 text-right font-medium" colSpan={2}>
+                        Discount
+                      </td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          className="w-full border rounded px-2 py-1 text-sm focus:outline-blue-400"
+                          placeholder="10% or 100"
+                          value={discountInput}
+                          onChange={(e) => setDiscountInput(e.target.value)}
+                        />
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium">
+                        -{formatCurrency(discountAmount)}
+                      </td>
+                      <td />
+                    </tr>
+                    <tr className="bg-gradient-to-r from-blue-100 to-green-100 font-bold">
+                      <td className="py-2 px-3 text-right" colSpan={3}>
+                        Total
+                      </td>
+                      <td className="py-2 px-3 text-right">
+                        {formatCurrency(total)}
+                      </td>
+                      <td />
+                    </tr>
+                  </>
                 )}
               </tbody>
             </table>
@@ -328,6 +376,20 @@ export default function POSBilling() {
                     </td>
                   </tr>
                 ))}
+                <tr className="border-t">
+                  <td colSpan={3} className="text-right py-1">
+                    Subtotal
+                  </td>
+                  <td className="text-right py-1">{formatCurrency(subtotal)}</td>
+                </tr>
+                {discountAmount > 0 && (
+                  <tr>
+                    <td colSpan={3} className="text-right py-1">
+                      Discount ({discountInput})
+                    </td>
+                    <td className="text-right py-1">-{formatCurrency(discountAmount)}</td>
+                  </tr>
+                )}
                 <tr className="border-t font-bold">
                   <td colSpan={3} className="text-right py-1">
                     Total
